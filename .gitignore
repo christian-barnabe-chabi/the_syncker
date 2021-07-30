@@ -105,5 +105,5 @@ dist
 
 
 ./client/node_modules
-./client/LocalCopy
+./client/public
 ./server/node_modules
