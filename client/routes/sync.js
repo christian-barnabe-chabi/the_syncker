@@ -1,25 +1,57 @@
 const router = require("express").Router();
+const { default: axios } = require("axios");
 const fs = require("fs");
 const path = require("path");
-const { zip } = require('zip-a-folder');
+const { zip } = require("zip-a-folder");
+const FormData = require("form-data");
+const remoteSyncServer = "http://localhost:5000/sync";
+const chokidar = require("chokidar");
+const { request } = require("http");
+const configFile = require(path.join(__dirname, "../config", "localSyncFolder.json"));
+let localSyncDir = path.normalize(configFile.folder);
 
-router.get("/init", (req, res, next) => {
-  return res.json({
-    message: "Init",
-  });
+const fsWatcher = chokidar.watch(localSyncDir, {
+  awaitWriteFinish: true,
+  persistent: true,
+});
+
+const uploadQueue = [];
+let isSyncing = false;
+
+router.get("/init", async (req, res, next) => {
+  await axios
+    .get(remoteSyncServer + "/handshake")
+    .then((data) => {
+      return res.json({
+        message: "handshake successful",
+        localPath: localSyncDir
+      });
+    })
+    .catch((error) => {
+      return res.status(500).json({
+        message: "remote sync server is down - can't continue",
+      });
+    });
 });
 
 async function startSync(socket) {
-  socket.emit("message", `${socket.id} has started watching`);
-  const dir = "C:/Users/Christian/Desktop/MyCloud";
-  // const dir = path.join(__dirname, "../LocalCopy");
-  console.log(dir);
-  socket.emit("message", `target watched ${dir}`);
-  const fsWatcher = fs.watch(dir, { persistent: false, recursive: true });
+  socket.emit("syncStarted", `${socket.id} has started watching`);
+  socket.emit("message", `target watched ${localSyncDir}`);
 
-  fsWatcher.on("change", (eventType, fileName) => {
-    socket.emit("message", `${fileName} has got ${eventType} event`);
-    zipSyncFolder(dir, socket);
+  fsWatcher.on("all", async (event, path) => {
+    socket.emit("message", `${path} has got ${event} event`);
+    let type = event == ("unlinkDir" || "addDir") ? "dir" : "file";
+
+    let fullPath = path;
+    path = path.replace(localSyncDir, "");
+
+    let changeData = {
+      path: path,
+      fullPath: fullPath,
+      event: event,
+      type: type,
+    };
+    enqueueChange(localSyncDir, socket, changeData);
   });
 
   fsWatcher.on("error", () => {
@@ -27,20 +59,81 @@ async function startSync(socket) {
     startSync(socket);
   });
 
-  fsWatcher.on("close", () => {
-    socket.emit("message", `${socket.id} stoped watching`);
-  });
-
   socket.on("stopSync", async () => {
-    fsWatcher.close();
+    fs.unwatchFile(localSyncDir, fsWatcher);
+    socket.emit("syncStoped", `${socket.id} stoped watching`);
   });
+
+
+  socket.on("setSyncFolder", (folder) => {
+    const configData = {
+      folder: folder
+    };
+    const configFilePath = path.join(__dirname, "../config", "localSyncFolder.json");
+    fs.writeFileSync(configFilePath, JSON.stringify(configData));
+    localSyncDir = path.normalize(configFile.folder);
+    startSync(socket);
+    socket.emit("syncFolderChanged");
+  })
 }
 
-async function zipSyncFolder(syncFolder, socket) {
-  const output = path.join(__dirname, "../LocalCopy", "archive.zip");
-  socket.emit("compressStart", "Compression started");
-  await zip(syncFolder, output);
-  socket.emit("compressEnd", "Compression completed");
+async function enqueueChange(syncFolder, socket, changeData) {
+  changeData.path.replace(localSyncDir, "");
+
+  let formData = new FormData();
+  let fullPath = changeData.fullPath;
+  delete changeData.fullPath;
+
+  changeData.path = path.normalize(changeData.path);
+
+  if (
+    changeData.event != "unlink" &&
+    changeData.type == "file" &&
+    changeData.event != "addDir"
+  ) {
+    const file = fs.createReadStream(fullPath);
+    formData.append("file", file);
+    setTimeout(() => {
+      file.close();
+    }, 5000);
+  }
+
+  formData.append("path", changeData.path);
+  formData.append("event", changeData.event);
+  formData.append("type", changeData.type);
+
+  if (uploadQueue.length > 0) {
+    if (uploadQueue[uploadQueue.length - 1] == formData) {
+      return;
+    }
+  }
+  uploadQueue.push(formData);
+  syncWithServer(socket, changeData.path);
 }
 
-module.exports = {router, startSync};
+async function syncWithServer(socket, path) {
+  if(!path) return;
+  if (uploadQueue.length > 0 && isSyncing == false) {
+    isSyncing = true;
+    let formData = uploadQueue.pop();
+
+    socket.emit("uploadingStart", `started syncing ${path}`);
+
+    await axios
+      .post(remoteSyncServer + "/upload", formData, {
+        headers: formData.getHeaders(),
+      })
+      .then((data) => {
+        socket.emit("uploadingEnd", `${path} synced with remote server`);
+        return syncWithServer(socket);
+      })
+      .catch((error) => {
+        socket.emit("uploadingError", `failled to sync ${path}`);
+        socket.emit("uploadingError", error.message);
+      });
+  } else {
+    isSyncing = false;
+  }
+}
+
+module.exports = { router, startSync };

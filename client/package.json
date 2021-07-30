@@ -9,10 +9,13 @@
     "server": "nodemon ./bin/www"
   },
   "dependencies": {
+    "axios": "^0.21.1",
+    "chokidar": "^3.5.2",
     "concurrently": "^6.2.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "^4.16.4",
+    "form-data": "^4.0.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "materialize-css": "^1.0.0-rc.2",

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="/materialize/css/materialize.min.css"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+
+  <body>
+    <nav class="pink darken-4">
+      <div class="nav-wrapper">
+        <div class="brand-logo left">The Syncker</div>
+        <ul class="right">
+          <li>
+            <span
+              class="
+                chip
+                green
+                icon
+                darken-1
+                text-white
+                serviceIsRunning
+                isHideOnInit
+              "
+              >Running...</span
+            ><span class="chip red darken-1 icon text-white serviceIsStoped"
+              >Stoped</span
+            >
+          </li>
+
+          <li>
+            <!-- Modal Trigger -->
+            <a class="waves-effect waves-light btn-small green modal-trigger" href="#modal1"
+              ><i class="material-icons left">settings</i>Settings</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div id="loader" class="progress blue isHideOnInit">
+      <div class="indeterminate"></div>
+    </div>
+
+    <div class="container">
+      <!-- Modal Structure -->
+      <div id="modal1" class="modal">
+        <div class="modal-content">
+          <h4>Folder to sync</h4>
+          <p>Enter the absolute path of the folder you want to sync</p>
+            <div class="input-field col s12">
+              <input id="localPathInput" type="text" class="validate" id="localPathInput" placeholder="">
+              <label for="localPathInput">Path</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <a href="#!" class="modal-close waves-effect waves-green btn-flat"
+            >Close</a
+          >
+          <a href="#!" class="modal-close waves-effect waves-green btn-flat" id="saveLocalPathInput"
+            >Save</a
+          >
+        </div>
+      </div>
+
+      <h3>Console</h3>
+      <div id="app-console" class="card">
+        <div class="card-content console"></div>
+      </div>
+    </div>
+
+    <script
+      type="text/javascript"
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+    ></script>
+    <script type="text/javascript" src="/javascripts/main.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.socket.io/4.0.1/socket.io.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="/materialize/js/materialize.min.js"
+      defer
+    ></script>
+  </body>
+</html>

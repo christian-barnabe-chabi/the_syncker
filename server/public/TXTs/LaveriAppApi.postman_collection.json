@@ -1,0 +1,223 @@
+{
+	"info": {
+		"_postman_id": "c4b4fb01-6e71-4b51-893e-3ef43c2c8a9b",
+		"name": "LaveriAppApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Client",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fullname\" : \"Anice Lee\",\r\n    \"contact_no\": \"+1 076677632\",\r\n    \"sex\": \"Female\",\r\n    \"age_range\": \"45-56\",\r\n    \"subscription\": {\r\n        \"plan\": \"PREMIUM\",\r\n        \"expiry_date\": \"2021-03-30T21:36:14.153Z\",\r\n        \"quota\": 20\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/clients/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"clients",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Client",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fullname\" : \"Jeanette Johnson\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/clients/605cfcc31028963fb015c34f",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"clients",
+						"605cfcc31028963fb015c34f"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Client",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/clients/605cfcc31028963fb015c34f",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"clients",
+						"605cfcc31028963fb015c34f"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Renew Client Subscription",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/clients/605bb0ce96c4af19dceba54c/subscription",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"clients",
+						"605bb0ce96c4af19dceba54c",
+						"subscription"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Client Subscription",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"plan\": \"PREMIUM\",\r\n    \"quota\": 50\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/clients/605bb0ce96c4af19dceba54c/subscription",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"clients",
+						"605bb0ce96c4af19dceba54c",
+						"subscription"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Client Subscription",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"plan\": \"PREMIUM\",\r\n    \"quota\": 80\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/clients/605bb0ce96c4af19dceba54c/subscription",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"clients",
+						"605bb0ce96c4af19dceba54c",
+						"subscription"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cancel Client Subscription",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/clients/605bb0ce96c4af19dceba54c/subscription",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"clients",
+						"605bb0ce96c4af19dceba54c",
+						"subscription"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

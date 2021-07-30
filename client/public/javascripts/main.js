@@ -1,36 +1,27 @@
 jQuery(async () => {
-  const startServiceBtn = $("#startServiceBtn");
-  const stopServiceBtn = $("#stopServiceBtn");
+
+  $(document).ready(function(){
+    $('.modal').modal();
+  });
+
+  const localPathInput = $("#localPathInput");
+  const saveLocalPathInput = $("#saveLocalPathInput");
   const serviceIsRunning = $(".serviceIsRunning");
   const serviceIsStoped = $(".serviceIsStoped");
   const socket = io("http://localhost:3000", {reconnectionDelayMax: 10000, autoConnect: false,});
   let retryingInterval;
-  let serviceIsSyncing = false;
 
   $(document).on('contextmenu', (event)=>{
     event.preventDefault();
   })
 
-  startServiceBtn.on("click", async (event) => {
-    serviceIsRunning.removeClass("isHideOnInit");
-    event.preventDefault();
+  saveLocalPathInput.on('click', () => {
+    socket.emit("setSyncFolder", localPathInput.val());
 
-    await startSync();
-
-    serviceIsStoped.fadeOut(100, null, () => {
-      serviceIsRunning.fadeIn(100);
-    });
-  });
-
-  stopServiceBtn.on("click", async (event) => {
-    event.preventDefault();
-
-    await stopSync();
-
-    serviceIsRunning.fadeOut(100, null, () => {
-      serviceIsStoped.fadeIn(100);
-    });
-  });
+    // socket.on("syncFolderChanged", ()=>{
+      // window.location.reload();
+    // })
+  })
 
   await initSync();
 
@@ -39,17 +30,35 @@ jQuery(async () => {
     socket.connect();
 
     socket.on("connect", () => {
+      serviceIsStoped.fadeOut(100, null, () => {
+        serviceIsRunning.removeClass("isHideOnInit");
+        serviceIsRunning.fadeIn(100);
+      });
       clearInterval(retryingInterval);
       outputMessage("Connection with remote server established successfully", "socket", "green");
 
-      if(serviceIsSyncing) {
-        socket.emit("startSync");
-      }
+      socket.emit("startSync");
     });
 
     socket.on('message', (message) => {
       outputMessage(message, "socket", "yellow");
     });
+    
+    socket.on('syncStoped', (message) => {
+      outputMessage(message, "socket", "red");
+      serviceIsRunning.fadeOut(100, null, () => {
+        serviceIsStoped.fadeIn(100);
+      });
+    });
+    
+    socket.on('syncStarted', (message) => {
+      outputMessage(message, "socket", "red");
+      serviceIsStoped.fadeOut(100, null, () => {
+        serviceIsRunning.fadeIn(100);
+      });
+    });
+
+    
     
     socket.on('compressStart', (message) => {
       $('#loader').removeClass("isHideOnInit");
@@ -62,7 +71,30 @@ jQuery(async () => {
       outputMessage(message, "conpression", "magenta");
     });
     
+    socket.on('uploadingStart', (message) => {
+      $('#loader').fadeIn(100);
+      outputMessage(message, "uploading", "cyan");
+    });
+    
+    socket.on('uploadingEnd', (message) => {
+      $('#loader').fadeOut(100);
+      outputMessage(message, "uploading", "green");
+    });
+    
+    socket.on('uploadingError', (message) => {
+      $('#loader').fadeOut(100);
+      console.log(message);
+      outputMessage(message, "uploading", "red");
+    });
+
+
+    
     socket.on('disconnect', (message) => {
+
+      serviceIsRunning.fadeOut(100, null, () => {
+        serviceIsStoped.fadeIn(100);
+      });
+
       outputMessage("Disconnected. Reconnecting ...", "socket", "yellow");
       retryingInterval = setInterval(async ()=>{
         outputMessage(`Retrying in 5s`, "socket", "yellow");
@@ -99,6 +131,7 @@ jQuery(async () => {
         throw new Error(message);
       }
   
+      localPathInput.val(response.localPath);
       outputMessage(message, data.status, "green");
       return response;
 
@@ -111,9 +144,10 @@ jQuery(async () => {
   function outputMessage(message, status = "update", color = "white") {
     const appConsole = $("#app-console .console");
     const appConsoleContainer = $("#app-console");
-    appConsoleContainer.scrollTop(appConsole.height())
+    appConsoleContainer.scrollTop(appConsole.height()+100);
+    const date = new Date().toDateString();
     const output = $(
-      `<p>[<span style='color: ${color}'>${status}</span>] ${message}</p>`
+      `<p>[${date}] [<span style='color: ${color}'>${status}</span>] ${message}</p>`
     );
     appConsole.append(output);
   }

@@ -22,7 +22,7 @@ const io = socketio(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log(io.engine.clientsCount);
+  // console.log(io.engine.clientsCount);
   socket.emit("message", `Host connected ${socket.id}`);
 
   socket.on("startSync", async () => {
