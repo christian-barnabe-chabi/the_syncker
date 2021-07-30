@@ -1,0 +1,50 @@
+body {
+  padding: 00px;
+  /* font: 14px "Lucida Grande", Helvetica, Arial, sans-serif; */
+}
+
+a {
+  color: #00B7FF;
+}
+
+*:not(.material-icons) {
+  font-family: "MD LIGHT" !important;
+}
+
+.text-white {
+  color: white !important;
+}
+
+#app-console {
+  width: 100%;
+  height: 350px;
+  background-color: black;
+  color: white;
+  border-radius: 5px;
+  overflow-y: auto !important;
+}
+
+#app-console .console {
+  font-family: "MD CONSOLE";
+  font-size: 12px;
+}
+
+.isHideOnInit {
+  visibility: hidden !important;
+}
+
+#loader {
+  margin: 0px !important;
+  position: absolute !important;
+  top: 0px !important;
+}
+
+@font-face {
+  font-family: "MD LIGHT";
+  src: url("/md_fonts/Program-Light.otf");
+}
+
+@font-face {
+  font-family: "MD CONSOLE";
+  src: url("/md_fonts/Program-Primitiv.otf");
+}
