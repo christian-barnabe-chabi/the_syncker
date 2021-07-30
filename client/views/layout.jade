@@ -1,0 +1,14 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    link(href="https://fonts.googleapis.com/icon?family=Material+Icons", rel="stylesheet")
+    link(type="text/css", rel="stylesheet", href="/materialize/css/materialize.min.css")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+  body
+    block content
+    script(type="text/javascript", src="https://code.jquery.com/jquery-3.6.0.min.js")
+    script(type="text/javascript", src="/javascripts/main.js")
+    script(type="text/javascript", src="https://cdn.socket.io/4.0.1/socket.io.min.js")
+    script(type="text/javascript", src="/materialize/js/materialize.min.js", defer)
