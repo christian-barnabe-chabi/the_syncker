@@ -48,3 +48,28 @@ a {
   font-family: "MD CONSOLE";
   src: url("/md_fonts/Program-Primitiv.otf");
 }
+
+
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+  margin-right: 2px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: black;
+  border-radius: 5px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: white;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: whitesmoke;
+  border-radius: 5px;
+}
