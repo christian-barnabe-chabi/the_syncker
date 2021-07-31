@@ -46,9 +46,9 @@ async function startSync() {
   fsWatcher.on("all", async (event, path) => {
     let type = ((event == "unlinkDir") || (event == "addDir")) ? "dir" : "file";
 
-    const fileStat = fs.statSync(path);
-
+    
     if (event == "add" || event == "addDir") {
+      const fileStat = fs.statSync(path);
       return syncWithCheck([
         {
           path: path,
@@ -66,7 +66,7 @@ async function startSync() {
       fullPath: fullPath,
       event: event,
       type: type,
-      size: fileStat.size,
+      size: 0,
     };
     return enqueueChange(changeData);
   });

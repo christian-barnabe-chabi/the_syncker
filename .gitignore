@@ -105,7 +105,7 @@ dist
 
 
 ./client/node_modules
-./client/sync
-./client/sync.
+./server/sync
+./server/sync.
 ./server/node_modules
 ./server/upload
