@@ -18,6 +18,7 @@ let socket = null;
 const fsWatcher = chokidar.watch(localSyncDir, {
   awaitWriteFinish: false,
   persistent: true,
+  usePolling: true,
 });
 
 const uploadQueue = [];
@@ -47,7 +48,7 @@ async function startSync() {
     let type = ((event == "unlinkDir") || (event == "addDir")) ? "dir" : "file";
 
     
-    if (event == "add" || event == "addDir") {
+    if (event == "add" || event == "addDir" || event == "change") {
       const fileStat = fs.statSync(path);
       return syncWithCheck([
         {
