@@ -1,4 +1,5 @@
 const {app, BrowserWindow} = require("electron");
+const { onListening, server } = require("./bin/www");
 
 function createWindow () {
   const win = new BrowserWindow({
@@ -16,10 +17,14 @@ function createWindow () {
 }
 
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
+  if (process.platform !== 'darwin') {
+    app.quit();
+    server.close();
+  }
 })
 
 const startWindow = () => app.whenReady().then(() => {
+  server.on('listening', onListening);
   createWindow()
 });
 
