@@ -6,7 +6,7 @@ const http = require('http');
 const socketio = require('socket.io');
 
 const indexRouter = require('./routes/index');
-const {router:syncRouter, startSync} = require('./routes/sync');
+const {router:syncRouter, startSync, setSocketSync} = require('./routes/sync');
 
 var app = express();
 
@@ -21,13 +21,13 @@ const io = socketio(server, {
   },
 });
 
+startSync();
 io.on("connection", async (socket) => {
   socket.emit("message", `Host connected ${socket.id}`);
-  await startSync(socket);
+  setSocketSync(socket);
 });
 
 app.use(function (req, res, next) {
-  console.log("Socket init");
   req.io = io;
   next();
 })

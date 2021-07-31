@@ -38,6 +38,10 @@ jQuery(async () => {
       outputMessage(message, "socket", "yellow");
     });
     
+    socket.on('syncFolderChanged', (message) => {
+      outputMessage(message, "socket", "yellow");
+    });
+    
     socket.on('syncStarted', (message) => {
       outputMessage(message, "socket", "red");
       serviceIsStoped.fadeOut(100, null, () => {
@@ -48,12 +52,12 @@ jQuery(async () => {
     socket.on('uploadingStart', (message) => {
       $('#loader').removeClass("isHideOnInit");
       $('#loader').fadeIn(100);
-      outputMessage(message, "uploading", "cyan");
+      outputMessage(message, "syncing", "cyan");
     });
     
     socket.on('uploadingEnd', (message) => {
       $('#loader').fadeOut(100);
-      outputMessage(message, "uploading", "green");
+      outputMessage(message, "syncing", "green");
     });
     
     socket.on('uploadingError', (message) => {
@@ -80,15 +84,6 @@ jQuery(async () => {
     });
   }
 
-  async function startSync() {
-    socket.emit("startSync");
-    serviceIsSyncing = true;
-  }
-
-  async function stopSync() {
-    socket.emit("stopSync");
-    serviceIsSyncing = false;
-  }
 
   async function handleResponse(data) {
     let message = data.statusText;
