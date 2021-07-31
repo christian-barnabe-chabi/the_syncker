@@ -16,9 +16,9 @@
   </head>
 
   <body>
-    <nav class="pink darken-4">
+    <nav class="white darken-4">
       <div class="nav-wrapper">
-        <div class="brand-logo left">The Syncker</div>
+        <div class="brand-logo green-text left">The Syncker</div>
         <ul class="right">
           <li>
             <span
@@ -55,11 +55,15 @@
       <!-- Modal Structure -->
       <div id="modal1" class="modal">
         <div class="modal-content">
-          <h4>Folder to sync</h4>
+          <h4>Settings</h4>
           <p>Enter the absolute path of the folder you want to sync</p>
             <div class="input-field col s12">
-              <input id="localPathInput" type="text" class="validate" id="localPathInput" placeholder="">
+              <input id="localPathInput" type="text" class="validate" placeholder="">
               <label for="localPathInput">Path</label>
+            </div>
+            <div class="input-field col s12">
+              <input id="remoteServerUrlInput" type="text" class="validate" placeholder="">
+              <label for="remoteServerUrlInput">Remote server url</label>
             </div>
         </div>
         <div class="modal-footer">
@@ -72,7 +76,7 @@
         </div>
       </div>
 
-      <h3>Console</h3>
+      <h3 class="green-text">Console</h3>
       <div id="app-console" class="card">
         <div class="card-content console"></div>
       </div>

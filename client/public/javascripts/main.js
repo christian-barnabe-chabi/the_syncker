@@ -5,6 +5,7 @@ jQuery(async () => {
   });
 
   const localPathInput = $("#localPathInput");
+  const remoteServerUrlInput = $("#remoteServerUrlInput");
   const saveLocalPathInput = $("#saveLocalPathInput");
   const serviceIsRunning = $(".serviceIsRunning");
   const serviceIsStoped = $(".serviceIsStoped");
@@ -16,7 +17,11 @@ jQuery(async () => {
   })
 
   saveLocalPathInput.on('click', () => {
-    socket.emit("setSyncFolder", localPathInput.val());
+    const configData = {
+      "folder": localPathInput.val(),
+      "server": remoteServerUrlInput.val(),
+    }
+    socket.emit("setSyncFolder", configData);
   })
 
   await initSync();
@@ -31,7 +36,7 @@ jQuery(async () => {
         serviceIsRunning.fadeIn(100);
       });
       clearInterval(retryingInterval);
-      outputMessage("Connection with remote server established successfully", "socket", "green");
+      outputMessage("Connection with remote server established successfully", "socket", "#29b6f6");
     });
 
     socket.on('message', (message) => {
@@ -57,7 +62,7 @@ jQuery(async () => {
     
     socket.on('uploadingEnd', (message) => {
       $('#loader').fadeOut(100);
-      outputMessage(message, "syncing", "green");
+      outputMessage(message, "syncing", "#29b6f6");
     });
     
     socket.on('uploadingError', (message) => {
@@ -100,7 +105,8 @@ jQuery(async () => {
       }
   
       localPathInput.val(response.localPath);
-      outputMessage(message, data.status, "green");
+      remoteServerUrlInput.val(response.serverUrl);
+      outputMessage(message, data.status, "#29b6f6");
       return response;
 
     } catch (error) {

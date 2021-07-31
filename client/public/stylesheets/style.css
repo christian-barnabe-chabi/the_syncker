@@ -18,7 +18,7 @@ a {
 #app-console {
   width: 100%;
   height: 350px;
-  background-color: black;
+  background-color: #000731;
   color: white;
   border-radius: 5px;
   overflow-y: auto !important;
