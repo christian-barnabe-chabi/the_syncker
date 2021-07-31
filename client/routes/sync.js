@@ -3,7 +3,6 @@ const { default: axios } = require("axios");
 const fs = require("fs");
 const path = require("path");
 const FormData = require("form-data");
-const remoteSyncServer = "http://localhost:5000/sync";
 const chokidar = require("chokidar");
 const wget = require("node-wget");
 const configFile = require(path.join(
@@ -11,6 +10,8 @@ const configFile = require(path.join(
   "../config",
   "localSyncFolder.json"
 ));
+
+let remoteSyncServer = configFile.server;
 let localSyncDir = path.normalize(configFile.folder);
 const dirTree = require("directory-tree");
 let socket = null;
@@ -27,12 +28,13 @@ router.get("/init", async (req, res, next) => {
   return res.json({
     message: "handshake successful",
     localPath: localSyncDir,
+    serverUrl: remoteSyncServer,
   });
 });
 
 async function startSync() {
   axios
-    .get(remoteSyncServer + "/handshake")
+    .get(remoteSyncServer + "/sync/handshake")
     .then((data) => {
       doUpdate();
     })
@@ -120,7 +122,7 @@ async function syncWithServer(path, formData) {
   socket?.emit("uploadingStart", `started syncing ${path}`);
 
   await axios
-    .post(remoteSyncServer + "/upload", formData, {
+    .post(remoteSyncServer + "/sync/upload", formData, {
       headers: formData.getHeaders(),
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
@@ -173,7 +175,7 @@ function syncWithCheck(paths) {
     };
 
     await axios
-      .post(remoteSyncServer + "/autoCheck", changeData, {
+      .post(remoteSyncServer + "/sync/autoCheck", changeData, {
         headers: { "Content-Type": "application/json" },
       })
       .then((reply) => {
@@ -189,12 +191,12 @@ function syncWithCheck(paths) {
 }
 
 async function pullFromRemoteServer() {
-  await axios.get(remoteSyncServer + "/getTree").then((reply) => {
+  await axios.get(remoteSyncServer + "/sync/getTree").then((reply) => {
     const paths = reply.data;
 
     paths.forEach(async (pathObject) => {
       const fullPath = path.normalize(localSyncDir + pathObject.path);
-      const url = remoteSyncServer + "/getFile?filePath=" + pathObject.path;
+      const url = remoteSyncServer + "/sync/getFile?filePath=" + pathObject.path;
       const dirPath = path.dirname(fullPath);
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
@@ -216,17 +218,17 @@ async function pullFromRemoteServer() {
 function setSocketSync(s) {
   socket = s;
 
-  socket?.on("setSyncFolder", (folder) => {
-    const configData = {
-      folder: folder,
-    };
+  socket?.on("setSyncFolder", (config) => {
+    const configData = config;
+
     const configFilePath = path.join(
       __dirname,
       "../config",
       "localSyncFolder.json"
     );
     fs.writeFileSync(configFilePath, JSON.stringify(configData));
-    localSyncDir = path.normalize(configFile.folder);
+    localSyncDir = path.normalize(config.folder);
+    remoteSyncServer = config.server;
     startSync();
     console.log(`local sycned folder has changed to ${folder}`);
     socket?.emit(
