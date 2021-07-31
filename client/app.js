@@ -21,14 +21,9 @@ const io = socketio(server, {
   },
 });
 
-io.on("connection", (socket) => {
-  // console.log(io.engine.clientsCount);
+io.on("connection", async (socket) => {
   socket.emit("message", `Host connected ${socket.id}`);
-
-  socket.on("startSync", async () => {
-    await startSync(socket);
-  });
-
+  await startSync(socket);
 });
 
 app.use(function (req, res, next) {

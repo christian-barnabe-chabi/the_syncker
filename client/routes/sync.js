@@ -7,8 +7,13 @@ const FormData = require("form-data");
 const remoteSyncServer = "http://localhost:5000/sync";
 const chokidar = require("chokidar");
 const { request } = require("http");
-const configFile = require(path.join(__dirname, "../config", "localSyncFolder.json"));
+const configFile = require(path.join(
+  __dirname,
+  "../config",
+  "localSyncFolder.json"
+));
 let localSyncDir = path.normalize(configFile.folder);
+let dirTree = require("directory-tree");
 
 const fsWatcher = chokidar.watch(localSyncDir, {
   awaitWriteFinish: true,
@@ -24,7 +29,7 @@ router.get("/init", async (req, res, next) => {
     .then((data) => {
       return res.json({
         message: "handshake successful",
-        localPath: localSyncDir
+        localPath: localSyncDir,
       });
     })
     .catch((error) => {
@@ -35,6 +40,7 @@ router.get("/init", async (req, res, next) => {
 });
 
 async function startSync(socket) {
+  doUpdate(socket);
   socket.emit("syncStarted", `${socket.id} has started watching`);
   socket.emit("message", `target watched ${localSyncDir}`);
 
@@ -51,7 +57,7 @@ async function startSync(socket) {
       event: event,
       type: type,
     };
-    enqueueChange(localSyncDir, socket, changeData);
+    enqueueChange(socket, changeData);
   });
 
   fsWatcher.on("error", () => {
@@ -59,25 +65,23 @@ async function startSync(socket) {
     startSync(socket);
   });
 
-  socket.on("stopSync", async () => {
-    fs.unwatchFile(localSyncDir, fsWatcher);
-    socket.emit("syncStoped", `${socket.id} stoped watching`);
-  });
-
-
   socket.on("setSyncFolder", (folder) => {
     const configData = {
-      folder: folder
+      folder: folder,
     };
-    const configFilePath = path.join(__dirname, "../config", "localSyncFolder.json");
+    const configFilePath = path.join(
+      __dirname,
+      "../config",
+      "localSyncFolder.json"
+    );
     fs.writeFileSync(configFilePath, JSON.stringify(configData));
     localSyncDir = path.normalize(configFile.folder);
     startSync(socket);
     socket.emit("syncFolderChanged");
-  })
+  });
 }
 
-async function enqueueChange(syncFolder, socket, changeData) {
+async function enqueueChange(socket, changeData) {
   changeData.path.replace(localSyncDir, "");
 
   let formData = new FormData();
@@ -107,33 +111,95 @@ async function enqueueChange(syncFolder, socket, changeData) {
       return;
     }
   }
-  uploadQueue.push(formData);
-  syncWithServer(socket, changeData.path);
+
+  setTimeout(() => {
+    syncWithServer(socket, changeData.path, formData);
+  }, 2000);
 }
 
-async function syncWithServer(socket, path) {
-  if(!path) return;
-  if (uploadQueue.length > 0 && isSyncing == false) {
-    isSyncing = true;
-    let formData = uploadQueue.pop();
+async function syncWithServer(socket, path, formData) {
+  if (!path) {
+    return;
+  }
 
-    socket.emit("uploadingStart", `started syncing ${path}`);
+  socket.emit("uploadingStart", `started syncing ${path}`);
 
-    await axios
-      .post(remoteSyncServer + "/upload", formData, {
-        headers: formData.getHeaders(),
+  await axios
+    .post(remoteSyncServer + "/upload", formData, {
+      headers: formData.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    })
+    .then((data) => {
+      socket.emit("uploadingEnd", `${path} synced with remote server`);
+    })
+    .catch((error) => {
+      socket.emit("uploadingError", `failled to sync ${path}`);
+      socket.emit("uploadingError", error);
+    });
+}
+
+function doUpdate(socket) {
+  const paths = [];
+  function recurse(pathObject) {
+    if (pathObject.hasOwnProperty("children") && pathObject.children.length > 0) {
+      pathObject.children.forEach((child) => {
+        return recurse(child);
+      });
+    } else {
+      if (pathObject.hasOwnProperty("path")) {
+        paths.push(pathObject);
+      }
+    }
+  }
+
+  recurse(dirTree(localSyncDir));
+  autoSync(socket, paths);
+}
+
+function autoSync(socket, paths) {
+  let count = 0;
+  const promises = [];
+  paths.forEach(async (obj) => {
+    const fullPath = obj.path;
+    const path = obj.path.replace(localSyncDir, "");
+    const type = obj.type == "directory" ? "dir" : "file";
+    const event = obj.type == "directory" ? "addDir" : "add";
+
+    const changeData = {
+      path: path,
+      fullPath: fullPath,
+      event: event,
+      type: type,
+    };
+
+    const promise = await axios
+      .post(remoteSyncServer + "/autoCheck", changeData, {
+        headers: { "Content-Type": "application/json" },
       })
-      .then((data) => {
-        socket.emit("uploadingEnd", `${path} synced with remote server`);
-        return syncWithServer(socket);
+      .then((reply) => {
+        if (reply.status == "202") {
+          count++;
+          enqueueChange(socket, changeData);
+          return changeData;
+        }
       })
       .catch((error) => {
-        socket.emit("uploadingError", `failled to sync ${path}`);
-        socket.emit("uploadingError", error.message);
+        socket.emit("message", error.message);
       });
-  } else {
-    isSyncing = false;
-  }
+
+      promises.push(promise);
+
+  });
+
+  Promise.all(promises).then((values) => {
+    socket.emit('message', `${values.length} files have been synced to the remote server`);
+  });
+
 }
+
+async function pullFromRemoteServer(socket) {
+  socket.emit("message", "pulling from remote server");
+} 
 
 module.exports = { router, startSync };
