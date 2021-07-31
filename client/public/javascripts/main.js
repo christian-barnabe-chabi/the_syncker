@@ -17,10 +17,6 @@ jQuery(async () => {
 
   saveLocalPathInput.on('click', () => {
     socket.emit("setSyncFolder", localPathInput.val());
-
-    // socket.on("syncFolderChanged", ()=>{
-      // window.location.reload();
-    // })
   })
 
   await initSync();
@@ -36,19 +32,10 @@ jQuery(async () => {
       });
       clearInterval(retryingInterval);
       outputMessage("Connection with remote server established successfully", "socket", "green");
-
-      socket.emit("startSync");
     });
 
     socket.on('message', (message) => {
       outputMessage(message, "socket", "yellow");
-    });
-    
-    socket.on('syncStoped', (message) => {
-      outputMessage(message, "socket", "red");
-      serviceIsRunning.fadeOut(100, null, () => {
-        serviceIsStoped.fadeIn(100);
-      });
     });
     
     socket.on('syncStarted', (message) => {
@@ -57,21 +44,9 @@ jQuery(async () => {
         serviceIsRunning.fadeIn(100);
       });
     });
-
-    
-    
-    socket.on('compressStart', (message) => {
-      $('#loader').removeClass("isHideOnInit");
-      $('#loader').fadeIn(100);
-      outputMessage(message, "compression", "orange");
-    });
-    
-    socket.on('compressEnd', (message) => {
-      $('#loader').fadeOut(100);
-      outputMessage(message, "conpression", "magenta");
-    });
     
     socket.on('uploadingStart', (message) => {
+      $('#loader').removeClass("isHideOnInit");
       $('#loader').fadeIn(100);
       outputMessage(message, "uploading", "cyan");
     });
@@ -84,10 +59,8 @@ jQuery(async () => {
     socket.on('uploadingError', (message) => {
       $('#loader').fadeOut(100);
       console.log(message);
-      outputMessage(message, "uploading", "red");
+      outputMessage(message.message || "sync error", "uploading", "red");
     });
-
-
     
     socket.on('disconnect', (message) => {
 

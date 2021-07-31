@@ -1,15 +1,18 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
-const syncedDir = "./public";
+const syncedDir = "./sync";
 const multer = require('multer');
+const asynHandler = require('async-handler');
+const {v4: uuidv4}  = require('uuid');
+const dirTree = require('directory-tree');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "./upload");
   },
   filename: (req, file, cb) => {
-    cb(null, ""+new Date().getTime());
+    cb(null, ""+uuidv4());
   }
 });
 
@@ -44,6 +47,12 @@ router.post('/upload',  upload.single('file'), async (req, res, next) => {
   }
   
   if(requestData.event == "add") {
+    const dirPath = path.dirname(fullPath);
+
+    if(!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, {recursive: true});
+    }
+
     fs.renameSync(req.file.path, fullPath);
     return res.status(200).json({message: "file created"});
   }
@@ -52,8 +61,44 @@ router.post('/upload',  upload.single('file'), async (req, res, next) => {
 
 });
 
+router.post('/autoCheck', (req, res, next) => {
+
+  const requestData = req.body;
+  const fullPath = path.normalize(syncedDir+requestData.path);
+
+  if(fs.existsSync(fullPath)) {
+    return res.status(200).json({message: "up to date"});
+  } else {
+    return res.status(202).json({message: "not up to date"});
+  }
+});
+
 router.get('/handshake', (req, res, next) => {
+
+  if(!fs.existsSync(syncedDir)) {
+    fs.mkdirSync(syncedDir);
+  }
+
   return res.status(200).json({message: "alive"});
+});
+
+router.get('/getTree', (req, res, next) => {
+  const paths = [];
+  function recurse(pathObject) {
+    if (pathObject.hasOwnProperty("children") && pathObject.children.length > 0) {
+      pathObject.children.forEach((child) => {
+        return recurse(child);
+      });
+    } else {
+      if (pathObject.hasOwnProperty("path")) {
+        pathObject.path = pathObject.path.replace(path.normalize(syncedDir), '');
+        paths.push(pathObject);
+      }
+    }
+  }
+
+  recurse(dirTree(path.normalize(syncedDir)));
+  res.json(paths);
 })
 
 module.exports = router;
