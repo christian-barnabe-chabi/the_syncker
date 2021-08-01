@@ -21,7 +21,7 @@ const io = socketio(server, {
   },
 });
 
-startSync();
+// startSync();
 io.on("connection", async (socket) => {
   socket.emit("message", `Host connected ${socket.id}`);
   setSocketSync(socket);

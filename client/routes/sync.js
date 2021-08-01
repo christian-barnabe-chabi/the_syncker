@@ -25,6 +25,7 @@ const fsWatcher = chokidar.watch(localSyncDir, {
 const uploadQueue = [];
 
 router.get("/init", async (req, res, next) => {
+  startSync();
   return res.json({
     message: "handshake successful",
     localPath: localSyncDir,
@@ -230,10 +231,10 @@ function setSocketSync(s) {
     localSyncDir = path.normalize(config.folder);
     remoteSyncServer = config.server;
     startSync();
-    console.log(`local sycned folder has changed to ${folder}`);
+    console.log(`local sycned folder has changed to ${config.folder}`);
     socket?.emit(
       "syncFolderChanged",
-      `local sycned folder has changed to ${folder}`
+      `local sycned folder has changed to ${config.folder}`
     );
   });
 }
